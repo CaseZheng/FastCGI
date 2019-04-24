@@ -2,19 +2,10 @@
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/mit-license.php)
 [![platform](https://img.shields.io/badge/platform-linux-brightgreen.svg)](/README.md)
 
-从[async-or-coroutine-fastcgi](https://github.com/toniz/fastcgi-async-or-coroutine)fork而来,对其进行优化并添加一些新的特性
+从[async-or-coroutine-fastcgi](https://github.com/toniz/fastcgi-async-or-coroutine) fork而来,分析代码,修复一些隐藏bug,优化性能并添加一些新的特性
 
 # async-or-coroutine-fastcgi
-`mucgi` is a async fastcgi using Muduo Network Library.
-`cocgi` is a coroutine fastcgi using Tencent Libco Library.
-Modify the BackendProc Class then You can pass the http request to  back-end service.
-
-`mucgi` and `cocgi` are the original fastcgi optimization model.
-__mucgi is better than cocgi， cocgi is better than libfcgi for network jitter coping ability.
-cocgi is better than mucgi, mucgi is better than libfcgi for coping ability of back-end business complexity.__
-* `mucgi` `cocgi` can be used together in one system:
 ![图片](/doc/image/last01.jpg)
-
 ___
 
 # 介绍
@@ -25,27 +16,23 @@ ___
 两者针对的场景略有不同。可以根据业务情况选择使用:
 * 对于网络抖动的应付能力，`mucgi`优于`cocgi`优于`libfcgi`。
 * 对于后端业务复杂度的应付能力,`cocgi`优于`mucgi`优于`libfcgi`。
+
 >在一个系统中两者可以结合起来使用：
 >用`mucgi`接入如秒杀活动，抽奖等请求数波动大且响应速度快的后端。
 >用`cocgi`接入存在复杂业务逻辑，请求响应速度快慢不均的后端。
-
 ---
 
 # 三种模式优缺点：
 >  部署都是 nginx -> fastcgi -> 同步后端(测试用的是ice)
 ## 1. fastcgi(同步)
-__这个框架的fastcgi是用[官网](https://fastcgi-archives.github.io/ "悬停显示") 的libfcgi库编译C++程序，
+__这个框架的fastcgi是用[官网](https://fastcgi-archives.github.io/) 的libfcgi库编译C++程序，
 然后用cgi-fcgi或者spawn-fcgi指定ip端口调起这个程序处理fastcgi请求。__
 >网上搜到的nginx + fastcgi +c教程基本都是这个模式。
 
-
 #### 缺点：
 * 监听模式是 listen -> fork 共享监听端口给所有的进程。每次只有一个进程可以接受新连接。这个模式的问题后面会讨论到。
-
 * 同步进程个数，开多了浪费资源，开少了，nginx会报一堆connect refuse.因为如果所有fastcgi的进程都在忙。而且fastcgi的backlog(这个是存放三次握手成功但没access链接)满，那么nginx新建立的链接会直接返回失败。
-
 * 这里要重点指出，在fastcgi同步模型中，nginx -> fastcgi必须使用短链接。不要在nginx里面配fastcgi_keep_conn on.原因是上面说的，nginx不是所有请求都用已经存在的长链，他会自动去创建新链接。这个时候一个进程一个链接，已经没有办法接受新的链接，所以会出现一堆请求失败。
-
 * 不要去改fastcgi的listen backlog. 在backlog里面的已经三次握手链接，但没有accept的链接。这些链接会等待，不会立刻返回失败。模型里面设置是5,曾经试过把他改成128，也就是说有128个请求等在那里，导致超时的链接更多了。超时比拒绝链接更伤性能。
 
 #### 总结:
@@ -61,9 +48,10 @@ fastcgi要解决accept性能瓶颈目前没有很好的方案。使用 SO_REUSEP
 
 
 #### 改进点：
-    高内核版本使用SO_REUSEPORT提升accept性能。需要改libfcgi源码.
-    os_unix.c
-    修改代码如下：
+高内核版本使用SO_REUSEPORT提升accept性能。需要改libfcgi源码.
+os_unix.c
+修改代码如下：
+```cpp
     int OS_CreateLocalIpcFd(const char *bindPath, int backlog)
     {
     ...
@@ -82,7 +70,8 @@ fastcgi要解决accept性能瓶颈目前没有很好的方案。使用 SO_REUSEP
      339     }
      ...
     }
-    测试性能大概提升10%-15% 不算很高。不过方便添加fastcgi进程。
+```
+测试性能大概提升10%-15% 不算很高。不过方便添加fastcgi进程。
 
  ---
 ## 2. mucgi(异步)
@@ -107,10 +96,10 @@ __异步fastcgi(mucgi)使用了muduo网络库作为通讯框架。
 
    ---
 ## 3. cocgi(协程)
-__协程fastcgi(cocgi)使用了腾讯开源框架libco。
+协程fastcgi(cocgi)使用了腾讯开源框架libco。
 使用muduo的Buffer类作为tcp的receive buffer。
 加入Cgicc库多个文件用于解析http请求。
-仅需要修改backend.cpp和backend.h就可以把请求传到后端服务使用.__
+仅需要修改backend.cpp和backend.h就可以把请求传到后端服务使用.
 > 使用scons安装，或者直接运行make.sh。(make.sh是导出的scons的编译日志,实在不想安装scons,直接运行make.sh也可以编译程序)
 
 #### 优点：
@@ -123,6 +112,3 @@ __协程fastcgi(cocgi)使用了腾讯开源框架libco。
 
 #### 改进点：
     nginx->cocgi可以使用长链接，如果要配好超时和自动回收的机制。还要和请求量和协程做个均衡。
-
-
-
