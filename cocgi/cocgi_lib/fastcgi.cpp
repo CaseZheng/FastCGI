@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include "fastcgi.h"
 #include "cgicc_lib/Cgicc.h"
-#include "backend.h"
 
 /* fastcgi protocol records struct
  * From : http://www.mit.edu/~yandros/doc/specs/fcgi-spec.html
@@ -95,8 +94,9 @@ int FastCgiCodec::readData(int &fd)
             {
                 return ERR_SOCKET_FINISH;
             }
-            return ret;
+            return ERR_OK;
         }
+        return ERR_OK;
     }
     else
     {
@@ -457,8 +457,11 @@ int FastCgiCodec::doRequest(int &fd)
     //printf("head cookie size [%lu]\n", cgi.getCookieList().size());
 
     // Call Backend Process
-    BackendProc proc;
-    std::string res = proc.printRequest(qmap, header);
+    std::string res; 
+    if(NULL != m_callBack)
+    {
+        res = m_callBack(qmap, header, m_parameter);
+    }
 
     // Build Response Packages
     muduo::net::Buffer response;

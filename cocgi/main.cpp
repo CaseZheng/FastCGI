@@ -16,6 +16,7 @@
 #include <sys/wait.h>
 
 #include "fastcgi.h"
+#include "backend.h"
 
 #define MAX_RECYCLE_COUNT 60
 
@@ -58,7 +59,7 @@ static void *readwrite_routine( void *arg )
         int fd = co->fd;
         co->fd = -1;
         int recycle = 0;
-        FastCgiCodec fcgi;
+        FastCgiCodec fcgi(BackendProc::printRequest, NULL);
         for(;;)
         {
             struct pollfd pf = { 0 };

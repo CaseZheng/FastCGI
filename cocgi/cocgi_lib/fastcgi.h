@@ -6,16 +6,17 @@
 #include "type.h"
 #include "muduo_lib/Buffer.h"
 
+typedef std::string(*FastCgiCodecCallback)(ParamMap &, ParamMap &, void*);
+
 // one FastCgiCodec per TcpConnection
 // one Tcp Connection per Coroutine
 // there is no concurrent requests of one connection.
 class FastCgiCodec
 {
   public:
-    FastCgiCodec()
+    FastCgiCodec(FastCgiCodecCallback callBack, void *parameter) : m_gotRequest(false), 
+        m_keepConn(false), m_callBack(callBack), m_parameter(parameter)
     {
-        m_gotRequest = false;
-        m_keepConn = false;
     };
 
     int readData(int &fd);
@@ -40,6 +41,8 @@ class FastCgiCodec
     muduo::net::Buffer m_stdin;
     muduo::net::Buffer m_paramsStream;
     ParamMap m_params;
+    FastCgiCodecCallback m_callBack;
+    void *m_parameter;
 
     const static unsigned kRecordHeader; 
 };

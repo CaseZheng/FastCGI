@@ -87,27 +87,6 @@ namespace cgicc {
   private:
     std::string fName;
   };
-  
-  // ============================================================
-  // Function copy_if (handy, missing from STL)
-  // ============================================================
-  // This code taken directly from 
-  // "The C++ Programming Language, Third Edition" by Bjarne Stroustrup
-  template<class In, class Out, class Pred>
-  Out 
-  copy_if(In first, 
-	  In last, 
-	  Out res, 
-	  Pred p)
-  {
-    while(first != last) {
-      if(p(*first))
-	*res++ = *first;
-      ++first;
-    }
-    return res;
-  }
-
 } // namespace cgicc
 
 // ============================================================
@@ -296,11 +275,11 @@ cgicc::Cgicc::findEntries(const std::string& param,
   result.clear();
 
   if(byName) {
-    copy_if(fFormData.begin(), fFormData.end(), 
+      std::copy_if(fFormData.begin(), fFormData.end(), 
 	    std::back_inserter(result),FE_nameCompare(param));
   }
   else {
-    copy_if(fFormData.begin(), fFormData.end(), 
+      std::copy_if(fFormData.begin(), fFormData.end(), 
 	    std::back_inserter(result), FE_valueCompare(param));
   }
 
