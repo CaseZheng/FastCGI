@@ -22,6 +22,15 @@ class FastCgiCodec
     int readData(int &fd);
     int doRequest(int &fd);
     void respond(std::string &out, muduo::net::Buffer* response);
+    void clear()
+    {
+        m_gotRequest = false;
+        m_keepConn = false;
+        m_buf.retrieveAll();
+        m_stdin.retrieveAll();
+        m_paramsStream.retrieveAll();
+        m_params.clear();
+    }
 
   private:
     struct FcgiRecordHeader;

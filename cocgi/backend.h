@@ -5,9 +5,7 @@
 class BackendProc
 {
   public:
-    static std::string printRequest(ParamMap &qmap, ParamMap &header, void *pArg);
-
-
+    static std::string PrintRequest(ParamMap &qmap, ParamMap &header, void *pArg);
 };
 
 

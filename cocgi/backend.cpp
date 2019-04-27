@@ -1,7 +1,7 @@
 #include "backend.h"
 #include <stdio.h> 
 
-std::string BackendProc::printRequest(ParamMap &qmap, ParamMap &header, void *pArg)
+std::string BackendProc::PrintRequest(ParamMap &qmap, ParamMap &header, void *pArg)
 {
     for (ParamMap::iterator it = qmap.begin(); it != qmap.end(); it++)
     {
