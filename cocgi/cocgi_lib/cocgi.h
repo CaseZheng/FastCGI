@@ -21,7 +21,7 @@ enum ECocgiLogLevel{
 typedef void(*LogCallBack)(ECocgiLogLevel eLogLevel, const char *pFile, int pLine, const std::string& strLog);
 
 #define COCGI_PRINT_LOG(COCGI_LEVEL, msg) \
-    if(NULL==CCocgiServer::GetLogCallBack() && CCocgiServer::GetLogLevel()<=COCGI_LEVEL) \
+    if(NULL!=CCocgiServer::GetLogCallBack() && CCocgiServer::GetLogLevel()<=COCGI_LEVEL) \
     { \
         std::stringstream ssLog; \
         ssLog << msg; \

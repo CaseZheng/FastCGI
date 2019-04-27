@@ -1,9 +1,20 @@
 #include <iostream>
 #include <string>
+#include <memory>
+#include "sstream"
 #include "cocgi.h"
 #include "backend.h"
 
 using namespace std;
+
+
+void PrintLog(ECocgiLogLevel eLogLevel, const char *pFile, int pLine, const std::string& strLog)
+{
+    std::stringstream ssLog;
+    ssLog << eLogLevel << "|" << pFile << "|" << pLine << "|" << strLog;
+    std::cout << ssLog.str() << std::endl;
+    fflush(stdout);
+}
 
 int main(int argc,char *argv[])
 {
@@ -20,13 +31,22 @@ int main(int argc,char *argv[])
     int proccnt = atoi( argv[4] );
     bool deamonize = argc >= 6 && strcmp(argv[5], "-d") == 0;
 
-    CCocgiServer oCocgiServer(std::string(ip), (unsigned short)port, (unsigned short)proccnt, (unsigned short)cnt, BackendProc::PrintRequest, (void *)NULL);
-    if(!oCocgiServer.Init())
+    std::shared_ptr<CCocgiServer> pCocgiServer = std::make_shared<CCocgiServer>(std::string(ip), 
+                                (unsigned short)port, (unsigned short)proccnt, (unsigned short)cnt, 
+                                            BackendProc::PrintRequest, (void *)NULL);
+    if(NULL == pCocgiServer)
+    {
+        std::cerr << "make_shared CocgiServer failure" << std::endl;
+        return -1;
+    }
+    pCocgiServer->SetLogCallBack(PrintLog);
+    pCocgiServer->SetLogLevel(COCGI_ALL);
+    if(!pCocgiServer->Init())
     {
         std::cerr << "CocgiServer Init failure" << std::endl;
         return -1;
     }
-    if(!oCocgiServer.Run(deamonize))
+    if(!pCocgiServer->Run(deamonize))
     {
         std::cerr << "CocgiServer Run failure" << std::endl;
         return -1;

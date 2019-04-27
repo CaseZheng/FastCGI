@@ -266,13 +266,17 @@ bool CCocgiServer::Init(bool bReuse, unsigned short usListenNum)
             return false;
         }
     }
-    m_pAcceptCoRoutine = std::make_shared<stCoRoutine_t>();
+    CO_DEBUG("create coroutine success");
+    CO_DEBUG("make_shared Accept Coroutine success");
+    stCoRoutine_t *pAcceptCoRount = NULL;
+    co_create(&pAcceptCoRount, NULL, AcceptRoutine, (void*)this);
+    m_pAcceptCoRoutine.reset(pAcceptCoRount);
     if(NULL == m_pAcceptCoRoutine)
     {
         CO_FATAL("make_shared listen stCoRoutine_t failure");
+        return false;
     }
-    stCoRoutine_t *pAcceptCoRount = m_pAcceptCoRoutine.get();
-    co_create(&pAcceptCoRount, NULL, AcceptRoutine, (void*)this);
+
     co_resume(m_pAcceptCoRoutine.get());
 
     return true;
@@ -284,12 +288,6 @@ bool CCocgiServer::CreateCocgiTask()
     if(NULL == pCocgiTask)
     {
         CO_FATAL("make_shared CocgiTask failure");
-        return false;
-    }
-    pCocgiTask->pCoRoutine = std::make_shared<stCoRoutine_t>();
-    if(NULL == pCocgiTask->pCoRoutine)
-    {
-        CO_FATAL("make_shared stCoRoutine_t failure");
         return false;
     }
     pCocgiTask->pFastCgiCodec = std::make_shared<FastCgiCodec>(m_pCgiCodecCallBack, m_pCgiCodecParameter);
@@ -305,8 +303,14 @@ bool CCocgiServer::CreateCocgiTask()
         return false;
     }
     pCocgiTask->iFd = -1;
-    stCoRoutine_t *pReadWriteCoRoutine = pCocgiTask->pCoRoutine.get();
+    stCoRoutine_t *pReadWriteCoRoutine = NULL;
     co_create(&pReadWriteCoRoutine, NULL, ReadwriteRoutine, (void*)&pCocgiTask);
+    pCocgiTask->pCoRoutine.reset(pReadWriteCoRoutine);
+    if(NULL == pCocgiTask->pCoRoutine)
+    {
+        CO_FATAL("make_shared stCoRoutine_t failure");
+        return false;
+    }
     m_lIdleTask.push_front(pCocgiTask);
 
     return true;
