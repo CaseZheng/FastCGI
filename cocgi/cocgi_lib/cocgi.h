@@ -97,4 +97,14 @@ private:
     std::shared_ptr<stCoRoutine_t> m_pAcceptCoRoutine;
 };
 
+class CstCoRoutineDelete
+{
+public:
+    void operator()(stCoRoutine_t *pCoRoutine)
+    {
+        CO_INFO("release stCoRoutine_t");
+        co_release(pCoRoutine);
+    }
+};
+
 #endif

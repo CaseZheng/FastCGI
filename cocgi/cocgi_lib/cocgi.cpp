@@ -270,7 +270,7 @@ bool CCocgiServer::Init(bool bReuse, unsigned short usListenNum)
     CO_DEBUG("make_shared Accept Coroutine success");
     stCoRoutine_t *pAcceptCoRount = NULL;
     co_create(&pAcceptCoRount, NULL, AcceptRoutine, (void*)this);
-    m_pAcceptCoRoutine.reset(pAcceptCoRount);
+    m_pAcceptCoRoutine = std::shared_ptr<stCoRoutine_t>(pAcceptCoRount, CstCoRoutineDelete());
     if(NULL == m_pAcceptCoRoutine)
     {
         CO_FATAL("make_shared listen stCoRoutine_t failure");
@@ -305,7 +305,7 @@ bool CCocgiServer::CreateCocgiTask()
     pCocgiTask->iFd = -1;
     stCoRoutine_t *pReadWriteCoRoutine = NULL;
     co_create(&pReadWriteCoRoutine, NULL, ReadwriteRoutine, (void*)&pCocgiTask);
-    pCocgiTask->pCoRoutine.reset(pReadWriteCoRoutine);
+    pCocgiTask->pCoRoutine = std::shared_ptr<stCoRoutine_t>(pReadWriteCoRoutine, CstCoRoutineDelete());
     if(NULL == pCocgiTask->pCoRoutine)
     {
         CO_FATAL("make_shared stCoRoutine_t failure");
