@@ -5,6 +5,7 @@
 #include <memory>
 #include <list>
 #include <unordered_set>
+#include <unordered_map>
 #include "co_routine.h"
 #include "fastcgi.h"
 
@@ -38,6 +39,7 @@ class CCocgiServer;
 struct CocgiTask
 {
     int iFd;
+    unsigned uCoId;
     std::shared_ptr<stCoRoutine_t> pCoRoutine;
     std::weak_ptr<CCocgiServer> pWeakCocgiServer;
     std::shared_ptr<FastCgiCodec> pFastCgiCodec;
@@ -73,7 +75,7 @@ private:
     void SetAddr(const char *pszIP, unsigned short shPort, struct sockaddr_in &addr);
     bool CreateCocgiTask();
     void *AcceptRoutine();
-    void *ReadwriteRoutine(std::shared_ptr<CocgiTask> &pCocgiTask);
+    void *RealReadwriteRoutine(CocgiTask *pCocgiTask);
 
 private:
     static void *AcceptRoutine(void *pArg);
@@ -82,6 +84,7 @@ private:
 private:
     static LogCallBack m_pLogCallBack;
     static ECocgiLogLevel m_eLogLevel;
+    static unsigned m_uCoIndex;
 
 private:
     unsigned short m_usProcessCount;
@@ -93,7 +96,8 @@ private:
     void * m_pCgiCodecParameter;
     std::string m_strIp;
     std::list<std::shared_ptr<CocgiTask> > m_lIdleTask;           //空闲的协程
-    std::unordered_set<std::shared_ptr<CocgiTask> > m_umRunTask;  //正在运行的协程
+    std::unordered_set<std::shared_ptr<CocgiTask> > m_usRunTask;  //正在运行的协程
+    std::unordered_map<unsigned, std::shared_ptr<CocgiTask> > m_umTask;  //所有协程
     std::shared_ptr<stCoRoutine_t> m_pAcceptCoRoutine;
 };
 

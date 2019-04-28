@@ -1,17 +1,18 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <sys/types.h>
+#include <unistd.h>
 #include "sstream"
 #include "cocgi.h"
 #include "backend.h"
 
 using namespace std;
 
-
 void PrintLog(ECocgiLogLevel eLogLevel, const char *pFile, int pLine, const std::string& strLog)
 {
     std::stringstream ssLog;
-    ssLog << eLogLevel << "|" << pFile << "|" << pLine << "|" << strLog;
+    ssLog << getpid() << "|" << eLogLevel << "|" << pFile << "|" << pLine << "|" << strLog;
     std::cout << ssLog.str() << std::endl;
     fflush(stdout);
 }

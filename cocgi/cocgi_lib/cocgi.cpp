@@ -19,6 +19,7 @@ int co_accept(int fd, struct sockaddr *addr, socklen_t *len);
 
 LogCallBack CCocgiServer::m_pLogCallBack = NULL;
 ECocgiLogLevel CCocgiServer::m_eLogLevel = COCGI_OFF;
+unsigned CCocgiServer::m_uCoIndex = 0;
 
 int CCocgiServer::SetNonBlock(int iSock)
 {
@@ -85,22 +86,70 @@ void CCocgiServer::SetAddr(const char *pszIP,const unsigned short shPort,struct 
     addr.sin_addr.s_addr = nIP;
 }
 
-void *CCocgiServer::ReadwriteRoutine(std::shared_ptr<CocgiTask> &pCocgiTask)
+bool CCocgiServer::CreateCocgiTask()
 {
+    std::shared_ptr<CocgiTask> pCocgiTask = std::make_shared<CocgiTask>();
     if(NULL == pCocgiTask)
+    {
+        CO_FATAL("make_shared CocgiTask failure");
+        return false;
+    }
+    pCocgiTask->pFastCgiCodec = std::make_shared<FastCgiCodec>(m_pCgiCodecCallBack, m_pCgiCodecParameter);
+    if(NULL == pCocgiTask->pFastCgiCodec)
+    {
+        CO_FATAL("make_shared FastCgiCodec failure");
+        return false;
+    }
+    pCocgiTask->pWeakCocgiServer = std::weak_ptr<CCocgiServer>(shared_from_this());
+    if(pCocgiTask->pWeakCocgiServer.expired())
+    {
+        CO_FATAL("weak_ptr CocgiServer expired");
+        return false;
+    }
+    pCocgiTask->iFd = -1;
+    pCocgiTask->uCoId = m_uCoIndex++;
+    stCoRoutine_t *pReadWriteCoRoutine = NULL;
+    co_create(&pReadWriteCoRoutine, NULL, ReadwriteRoutine, static_cast<void*>(pCocgiTask.get()));
+    pCocgiTask->pCoRoutine = std::shared_ptr<stCoRoutine_t>(pReadWriteCoRoutine, CstCoRoutineDelete());
+    if(NULL == pCocgiTask->pCoRoutine)
+    {
+        CO_FATAL("make_shared stCoRoutine_t failure");
+        return false;
+    }
+    m_lIdleTask.push_front(pCocgiTask);
+    m_umTask[pCocgiTask->uCoId] = pCocgiTask;
+
+    return true;
+}
+
+void *CCocgiServer::RealReadwriteRoutine(CocgiTask *pCocgi)
+{
+    CO_DEBUG("start ReadwriteRoutine");
+    if(NULL == pCocgi)
     {
         CO_FATAL("CocgiTask is NULL");
         return NULL;
     }
+    std::shared_ptr<CocgiTask> pCocgiTask = m_umTask[pCocgi->uCoId];
     for(;;)
     {
         if(-1 == pCocgiTask->iFd)
         {
-            pCocgiTask->pFastCgiCodec->clear();
-            m_lIdleTask.push_front(pCocgiTask);
-            m_umRunTask.erase(pCocgiTask);
-            co_yield_ct();
-            continue;
+            CO_DEBUG("CocgiTask iFd==-1 idel task");
+            if(m_usMaxCoroutineCount < m_umTask.size())
+            {
+                m_usRunTask.erase(pCocgiTask);
+                m_umTask.erase(pCocgiTask->uCoId);
+                return NULL;
+            }
+            else
+            {
+                pCocgiTask->pFastCgiCodec->clear();
+                m_lIdleTask.push_front(pCocgiTask);
+                m_usRunTask.erase(pCocgiTask);
+                co_yield_ct();
+                continue;
+            }
         }
 
         int iFd = pCocgiTask->iFd;
@@ -143,27 +192,32 @@ void *CCocgiServer::ReadwriteRoutine(void *pArg)
 {
     CO_DEBUG("start read write routine");
     co_enable_hook_sys();
-    std::shared_ptr<CocgiTask> *ppCocgiTask = (std::shared_ptr<CocgiTask>*)(pArg);
-    std::shared_ptr<CocgiTask> pCocgiTask = *ppCocgiTask;
+    CocgiTask *pCocgiTask = static_cast<CocgiTask*>(pArg);
     if(NULL == pCocgiTask)
     {
-        CO_DEBUG("CocgiTask is NULL");
+        CO_FATAL("CocgiTask is NULL");
         return NULL;
     }
+    CO_DEBUG("Readwrite uCoId:" << pCocgiTask->uCoId << " iFd:" << pCocgiTask->iFd);
     if(pCocgiTask->pWeakCocgiServer.expired())
     {
         CO_FATAL("Cocgiserver is expired");
         return NULL;
     }
-    auto pCocgiServer = pCocgiTask->pWeakCocgiServer.lock();
-    return pCocgiServer->ReadwriteRoutine(pCocgiTask);
+    std::shared_ptr<CCocgiServer> pCocgiServer = pCocgiTask->pWeakCocgiServer.lock();
+    CO_DEBUG("lock CocgiServer");
+    if(NULL == pCocgiServer)
+    {
+        CO_FATAL("Cocgiserver lock is NULL");
+        return NULL;
+    }
+    return pCocgiServer->RealReadwriteRoutine(pCocgiTask);
 }
 void *CCocgiServer::AcceptRoutine()
 {
     for(;;)
     {
-        if(m_lIdleTask.empty()
-                && (m_lIdleTask.size()+m_umRunTask.size() < m_usMaxCoroutineCount))
+        if(m_lIdleTask.empty() && m_umTask.size() < m_usMaxCoroutineCount)
         {
             CO_DEBUG("No idle coroutine, create a coroutine");
             if(!CreateCocgiTask())
@@ -180,21 +234,24 @@ void *CCocgiServer::AcceptRoutine()
         struct sockaddr_in addr; //maybe sockaddr_un;
         memset( &addr,0,sizeof(addr) );
         socklen_t len = sizeof(addr);
-
+        CO_DEBUG("start co_accept");
         int iFd = co_accept(m_iListenFd, (struct sockaddr *)&addr, &len);
         if(iFd < 0)
         {
+            CO_DEBUG("co_accept no request fd:" << iFd);
             struct pollfd pf = { 0 };
             pf.fd = m_iListenFd;
             pf.events = (POLLIN|POLLERR|POLLHUP);
-            co_poll(co_get_epoll_ct(), &pf, 1, 1000);
+            co_poll(co_get_epoll_ct(), &pf, 1, 60000);
+            CO_DEBUG("co_poll Timeout or event");
             continue;
         }
+        CO_DEBUG("co_accept socket fd:" << iFd);
         SetNonBlock(iFd);
         std::shared_ptr<CocgiTask> pCocgiTask = m_lIdleTask.front();
         pCocgiTask->iFd = iFd;
         m_lIdleTask.pop_front();
-        m_umRunTask.insert(pCocgiTask);
+        m_usRunTask.insert(pCocgiTask);
         co_resume(pCocgiTask->pCoRoutine.get());
     }
 
@@ -258,60 +315,6 @@ bool CCocgiServer::Init(bool bReuse, unsigned short usListenNum)
     SetNonBlock(m_iListenFd);
     CO_DEBUG("set listen socket non-blocking");
 
-    for(int i=0; i<m_usCoroutineCount; ++i)
-    {
-        if(!CreateCocgiTask())
-        {
-            CO_FATAL("create cocgi task failure");
-            return false;
-        }
-    }
-    CO_DEBUG("create coroutine success");
-    CO_DEBUG("make_shared Accept Coroutine success");
-    stCoRoutine_t *pAcceptCoRount = NULL;
-    co_create(&pAcceptCoRount, NULL, AcceptRoutine, (void*)this);
-    m_pAcceptCoRoutine = std::shared_ptr<stCoRoutine_t>(pAcceptCoRount, CstCoRoutineDelete());
-    if(NULL == m_pAcceptCoRoutine)
-    {
-        CO_FATAL("make_shared listen stCoRoutine_t failure");
-        return false;
-    }
-
-    co_resume(m_pAcceptCoRoutine.get());
-
-    return true;
-}
-
-bool CCocgiServer::CreateCocgiTask()
-{
-    std::shared_ptr<CocgiTask> pCocgiTask = std::make_shared<CocgiTask>();
-    if(NULL == pCocgiTask)
-    {
-        CO_FATAL("make_shared CocgiTask failure");
-        return false;
-    }
-    pCocgiTask->pFastCgiCodec = std::make_shared<FastCgiCodec>(m_pCgiCodecCallBack, m_pCgiCodecParameter);
-    if(NULL == pCocgiTask->pFastCgiCodec)
-    {
-        CO_FATAL("make_shared FastCgiCodec failure");
-        return false;
-    }
-    pCocgiTask->pWeakCocgiServer = std::weak_ptr<CCocgiServer>(shared_from_this());
-    if(pCocgiTask->pWeakCocgiServer.expired())
-    {
-        CO_FATAL("weak_ptr CocgiServer expired");
-        return false;
-    }
-    pCocgiTask->iFd = -1;
-    stCoRoutine_t *pReadWriteCoRoutine = NULL;
-    co_create(&pReadWriteCoRoutine, NULL, ReadwriteRoutine, (void*)&pCocgiTask);
-    pCocgiTask->pCoRoutine = std::shared_ptr<stCoRoutine_t>(pReadWriteCoRoutine, CstCoRoutineDelete());
-    if(NULL == pCocgiTask->pCoRoutine)
-    {
-        CO_FATAL("make_shared stCoRoutine_t failure");
-        return false;
-    }
-    m_lIdleTask.push_front(pCocgiTask);
 
     return true;
 }
@@ -333,7 +336,36 @@ bool CCocgiServer::Run(bool bDaemonize)
         }
         else
         {
+            for(int i=0; i<m_usCoroutineCount; ++i)
+            {
+                if(!CreateCocgiTask())
+                {
+                    CO_FATAL("create cocgi task failure");
+                    return false;
+                }
+            }
+            stCoRoutine_t *pAcceptCoRount = NULL;
+            co_create(&pAcceptCoRount, NULL, AcceptRoutine, (void*)this);
+            if(NULL == pAcceptCoRount)
+            {
+                CO_FATAL("co_create failure");
+                return false;
+            }
+            CO_DEBUG("create coroutine success");
+            m_pAcceptCoRoutine = std::shared_ptr<stCoRoutine_t>(pAcceptCoRount, CstCoRoutineDelete());
+            if(NULL == m_pAcceptCoRoutine)
+            {
+                CO_FATAL("make_shared listen stCoRoutine_t failure");
+                return false;
+            }
+            CO_DEBUG("make_shared Accept Coroutine success");
+            CO_DEBUG("resume AcceptRoutine");
+
+            co_resume(m_pAcceptCoRoutine.get());
+            CO_DEBUG("work process begins");
+
             co_eventloop(co_get_epoll_ct(), 0, 0);
+            CO_DEBUG("work process end");
             exit(0);
         }
     }
