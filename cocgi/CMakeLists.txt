@@ -22,6 +22,7 @@ AUX_SOURCE_DIRECTORY(./cocgi_lib/                   SOURCE_LIST)
 AUX_SOURCE_DIRECTORY(./cocgi_lib/cgicc_lib          SOURCE_LIST)
 AUX_SOURCE_DIRECTORY(./cocgi_lib/libco              SOURCE_LIST)
 AUX_SOURCE_DIRECTORY(./cocgi_lib/muduo_lib          SOURCE_LIST)
+AUX_SOURCE_DIRECTORY(../comm/                       SOURCE_LIST)
 SET(ASM_LIST ./cocgi_lib/libco/coctx_swap.S)
 
 MESSAGE(STATUS "${SOURCE_LIST}")
@@ -33,6 +34,7 @@ INCLUDE_DIRECTORIES(./cocgi_lib/)
 INCLUDE_DIRECTORIES(./cocgi_lib/cgicc_lib)
 INCLUDE_DIRECTORIES(./cocgi_lib/libco)
 INCLUDE_DIRECTORIES(./cocgi_lib/muduo_lib)
+INCLUDE_DIRECTORIES(../comm)
 INCLUDE_DIRECTORIES(/usr/include/jsoncpp)
 INCLUDE_DIRECTORIES(/usr/include/hiredis)
 INCLUDE_DIRECTORIES(/usr/include)
@@ -48,7 +50,7 @@ LINK_DIRECTORIES(/usr/local/lib64)
 SET(BIN_NAME fastcgi_cocgi)
 
 #需要链接的动态库
-SET(SO_LIST dl pthread)
+SET(SO_LIST dl pthread boost_system boost_filesystem boost_log_setup boost_log boost_thread ssl crypto dl z)
 
 MESSAGE(STATUS "${SO_LIST}")
 

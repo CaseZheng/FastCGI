@@ -8,8 +8,5 @@ class BackendProc
     static std::string PrintRequest(ParamMap &qmap, ParamMap &header, void *pArg);
 };
 
-
-
-
 #endif /*_BACKEND_PROC_H__*/
 

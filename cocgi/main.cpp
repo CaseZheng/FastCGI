@@ -6,15 +6,32 @@
 #include "sstream"
 #include "cocgi.h"
 #include "backend.h"
+#include "log.h"
 
 using namespace std;
 
-void PrintLog(ECocgiLogLevel eLogLevel, const char *pFile, int pLine, const std::string& strLog)
+void PrintLog(ECocgiLogLevel eLogLevel, const char *pFile, int iLine, const std::string& strLog)
 {
-    std::stringstream ssLog;
-    ssLog << getpid() << "|" << eLogLevel << "|" << pFile << "|" << pLine << "|" << strLog;
-    std::cout << ssLog.str() << std::endl;
-    fflush(stdout);
+    switch(eLogLevel)
+    {
+        case COCGI_DEBUG:
+            LOG_CO_PRINT(debug, pFile, iLine, strLog);
+            break;
+        case COCGI_INFO:
+            LOG_CO_PRINT(info, pFile, iLine, strLog);
+            break;
+        case COCGI_WARN:
+            LOG_CO_PRINT(warning, pFile, iLine, strLog);
+            break;
+        case COCGI_ERROR:
+            LOG_CO_PRINT(error, pFile, iLine, strLog);
+            break;
+        case COCGI_FATAL:
+            LOG_CO_PRINT(fatal, pFile, iLine, strLog);
+            break;
+        default:
+            LOG_CO_PRINT(debug, pFile, iLine, strLog);
+    };
 }
 
 int main(int argc,char *argv[])
@@ -26,6 +43,8 @@ int main(int argc,char *argv[])
             << "cocgi [IP] [PORT] [PROCESS_COUNT] [TASK_COUNT] -d #daemonize" << std::endl;
         return -1;
     }
+    CLog::InitLog("./log", tools::GetProcessName());
+    CLog::SetFilter(debug);
     const char *ip = argv[1];
     int port = atoi( argv[2] );
     int cnt = atoi( argv[3] );
@@ -37,19 +56,19 @@ int main(int argc,char *argv[])
                                             BackendProc::PrintRequest, (void *)NULL);
     if(NULL == pCocgiServer)
     {
-        std::cerr << "make_shared CocgiServer failure" << std::endl;
+        ERROR("make_shared CocgiServer failure");
         return -1;
     }
     pCocgiServer->SetLogCallBack(PrintLog);
     pCocgiServer->SetLogLevel(COCGI_ALL);
     if(!pCocgiServer->Init())
     {
-        std::cerr << "CocgiServer Init failure" << std::endl;
+        ERROR("CocgiServer Init failure");
         return -1;
     }
     if(!pCocgiServer->Run(deamonize))
     {
-        std::cerr << "CocgiServer Run failure" << std::endl;
+        ERROR("CocgiServer Run failure");
         return -1;
     }
 
