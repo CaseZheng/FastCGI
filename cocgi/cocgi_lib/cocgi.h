@@ -50,8 +50,7 @@ class CCocgiServer : public std::enable_shared_from_this<CCocgiServer>
 public:
     CCocgiServer(const std::string &strIp, unsigned short usPort, unsigned short usPCount, unsigned short usCCount,
             FastCgiCodecCallback pCgiCodecCallBack, void *pCgicodecParameter)
-        :
-        m_usProcessCount(usPCount), 
+        : m_usProcessCount(usPCount), 
         m_usCoroutineCount(usCCount), 
         m_usMaxCoroutineCount(50),
         m_usPort(usPort), 

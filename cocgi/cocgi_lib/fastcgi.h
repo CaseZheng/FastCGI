@@ -17,7 +17,12 @@ class FastCgiCodec
     FastCgiCodec(FastCgiCodecCallback callBack, void *parameter) : m_gotRequest(false), 
         m_keepConn(false), m_callBack(callBack), m_parameter(parameter)
     {
-    };
+        ;
+    }
+    virtual ~FastCgiCodec()
+    {
+        ;
+    }
 
     int readData(int &fd);
     int doRequest(int &fd);
