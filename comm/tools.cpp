@@ -4,6 +4,9 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/log/attributes/current_process_name.hpp>
+#include <signal.h>
+#include <execinfo.h>
+#include <fcntl.h>
 
 #include "tools.h"
 #include "log.h"
@@ -66,4 +69,35 @@ string tools::PrintHex(const vector<char>& buff)
 int tools::GetTimeStamps()
 {
     return time(NULL);
+}
+
+void tools::SaveBackTrace(int sig)
+{
+    FATAL("CoreTime:" << GetTimeStamps() << " SignalId:" << sig);
+    void* DumpArray[1000];
+    int nSize = backtrace(DumpArray, 1000);
+    ERROR("backtrace rank:" << nSize << " addr2line -f -C -e 应用名 地址");
+    if(nSize > 0)
+    {
+        char** symbols = backtrace_symbols(DumpArray, nSize);
+        if (symbols != NULL)
+        {
+            for (int i=0; i<nSize; ++i)
+            {
+                ERROR(to_string(nSize-i) << ": " << symbols[i]);
+            }
+            free(symbols);
+        }
+    }
+    exit(1);
+}
+
+void tools::SetSignal()
+{
+    signal(SIGFPE   , SaveBackTrace); // 浮点异常
+    signal(SIGILL   , SaveBackTrace); // 非法指令
+    signal(SIGBUS   , SaveBackTrace); // 总线错误
+    signal(SIGABRT  , SaveBackTrace); // 来自abort函数的终止信号
+    signal(SIGSEGV  , SaveBackTrace); // 无效的存储器引用(段错误)
+    signal(SIGIOT   , SaveBackTrace); // 执行I/O自陷
 }

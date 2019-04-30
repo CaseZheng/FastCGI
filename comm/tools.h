@@ -27,6 +27,8 @@ public:
             buf.push_back(tmp[i]);
         }
     }
+    static void SetSignal();
+    static void SaveBackTrace(int sig);
 };
 
 #endif

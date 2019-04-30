@@ -1,6 +1,7 @@
 #include "fastcgi_server.h"
 #include "log.h"
 #include "backend.h"
+#include "tools.h"
 
 void PrintLog(EFastCgiLogLevel eLogLevel, const char *pFile, int iLine, const std::string& strLog)
 {
@@ -38,6 +39,7 @@ int main(int argc, char *argv[])
     }
     CLog::InitLog("./log", tools::GetProcessName());
     CLog::SetFilter(debug);
+    tools::SetSignal();
     const char *ip = argv[1];
     int port = atoi( argv[2] );
     int proccnt = atoi( argv[3] );
