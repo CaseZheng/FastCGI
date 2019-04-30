@@ -2,12 +2,12 @@
 #define _BACKEND_PROC_H__
 
 #include <string>
-#include "type.h"
+#include "fastcgi_server.h"
 
 class BackendProc
 {
   public:
-    static void PrintRequest(ParamMap &qmap, ParamMap &header, void *pArg, std::string &strResp);
+    static void PrintRequest(ParamMap &umParam, void *pArg, std::string &strResp);
 };
 
 #endif /*_BACKEND_PROC_H__*/

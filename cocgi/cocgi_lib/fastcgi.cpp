@@ -460,7 +460,7 @@ int FastCgiCodec::doRequest(int &fd)
     std::string res; 
     if(NULL != m_callBack)
     {
-        res = m_callBack(qmap, header, m_parameter);
+        m_callBack(qmap, header, m_parameter, res);
     }
 
     // Build Response Packages

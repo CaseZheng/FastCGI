@@ -332,7 +332,7 @@ bool CCocgiServer::Run(bool bDaemonize)
         else if(pid < 0)
         {
             CO_FATAL("Fork child failure");
-            break;
+            continue;
         }
         else
         {

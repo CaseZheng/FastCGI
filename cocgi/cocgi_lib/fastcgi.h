@@ -6,7 +6,7 @@
 #include "type.h"
 #include "muduo_lib/Buffer.h"
 
-typedef std::string(*FastCgiCodecCallback)(ParamMap &, ParamMap &, void*);
+typedef void(*FastCgiCodecCallback)(ParamMap &, ParamMap &, void*, std::string &);
 
 // one FastCgiCodec per TcpConnection
 // one Tcp Connection per Coroutine

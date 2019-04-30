@@ -1,25 +1,24 @@
 #include "backend.h"
 #include <stdio.h> 
+#include "log.h"
 
-std::string BackendProc::PrintRequest(ParamMap &qmap, ParamMap &header, void *pArg)
+void BackendProc::PrintRequest(ParamMap &qmap, ParamMap &header, void *pArg, string &strResp)
 {
     for (ParamMap::iterator it = qmap.begin(); it != qmap.end(); it++)
     {
-        printf("Param: [%s] ==> [%s] \n", it->first.c_str(), it->second.c_str());
+        DEBUG("Param " << it->first << "=" << it->second);
     }
 
     for (ParamMap::iterator it = header.begin(); it != header.end(); it++)
     {
-        printf("Header:[%s] ==> [%s] \n", it->first.c_str(), it->second.c_str());
+        DEBUG("Header " << it->first << "=" << it->second);
     }
 
     std::string content = "OK!!";
-    std::string resp = "Content-Type: text/html; charset=UTF-8\r\n";
-    resp += "Content-Length: "; 
-    resp += content.length();
-    resp += "\r\n\r\n";
-    resp += content; 
-
-    return resp;
+    strResp = "Content-Type: text/html; charset=UTF-8\r\n";
+    strResp += "Content-Length: "; 
+    strResp += content.length();
+    strResp += "\r\n\r\n";
+    strResp += content; 
 }
 
