@@ -5,13 +5,14 @@
 
 #include "type.h"
 #include "muduo_lib/Buffer.h"
+#include <boost/noncopyable.hpp>
 
 typedef void(*FastCgiCodecCallback)(ParamMap &, ParamMap &, void*, std::string &);
 
 // one FastCgiCodec per TcpConnection
 // one Tcp Connection per Coroutine
 // there is no concurrent requests of one connection.
-class FastCgiCodec
+class FastCgiCodec : boost::noncopyable
 {
   public:
     FastCgiCodec(FastCgiCodecCallback callBack, void *parameter) : m_gotRequest(false), 
