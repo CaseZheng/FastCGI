@@ -8,7 +8,7 @@
 
 #include "muduo_net/InetAddress.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_net/Endian.h"
 #include "muduo_net/SocketsOps.h"
 

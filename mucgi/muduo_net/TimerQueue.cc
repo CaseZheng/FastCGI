@@ -12,7 +12,7 @@
 
 #include "muduo_net/TimerQueue.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_net/EventLoop.h"
 #include "muduo_net/Timer.h"
 #include "muduo_net/TimerId.h"

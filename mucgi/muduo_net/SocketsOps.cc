@@ -8,7 +8,7 @@
 
 #include "muduo_net/SocketsOps.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_base/Types.h"
 #include "muduo_net/Endian.h"
 
@@ -18,6 +18,7 @@
 #include <strings.h>  // bzero
 #include <sys/socket.h>
 #include <unistd.h>
+#include <sys/uio.h>
 
 using namespace muduo;
 using namespace muduo::net;

@@ -8,7 +8,7 @@
 
 #include "muduo_net/EPollPoller.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_net/Channel.h"
 
 #include <boost/static_assert.hpp>

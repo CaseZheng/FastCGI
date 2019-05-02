@@ -6,7 +6,7 @@
 
 // Author: Shuo Chen (chenshuo at chenshuo dot com)
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_net/Channel.h"
 #include "muduo_net/EventLoop.h"
 

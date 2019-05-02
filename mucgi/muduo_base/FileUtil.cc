@@ -8,7 +8,7 @@
 //
 
 #include "muduo_base/FileUtil.h"
-#include "muduo_base/Logging.h" // strerror_tl
+#include "log.h" // strerror_tl
 
 #include <boost/static_assert.hpp>
 
@@ -46,7 +46,7 @@ void FileUtil::AppendFile::append(const char* logline, const size_t len)
       int err = ferror(fp_);
       if (err)
       {
-        fprintf(stderr, "AppendFile::append() failed %s\n", strerror_tl(err));
+        LOG_ERROR << "AppendFile::append() failed " << err;
       }
       break;
     }

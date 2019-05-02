@@ -8,7 +8,7 @@
 
 #include "muduo_net/EventLoop.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_base/Mutex.h"
 #include "muduo_net/Channel.h"
 #include "muduo_net/Poller.h"
@@ -112,10 +112,7 @@ void EventLoop::loop()
     activeChannels_.clear();
     pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
     ++iteration_;
-    if (Logger::logLevel() <= Logger::TRACE)
-    {
-      printActiveChannels();
-    }
+    printActiveChannels();
     // TODO sort channel by priority
     eventHandling_ = true;
     for (ChannelList::iterator it = activeChannels_.begin();
