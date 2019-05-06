@@ -8,7 +8,7 @@
 
 #include "muduo_net/TcpConnection.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_base/WeakCallback.h"
 #include "muduo_net/Channel.h"
 #include "muduo_net/EventLoop.h"
@@ -42,7 +42,7 @@ TcpConnection::TcpConnection(EventLoop* loop,
                              int sockfd,
                              const InetAddress& localAddr,
                              const InetAddress& peerAddr)
-  : loop_(CHECK_NOTNULL(loop)),
+  : loop_(loop),
     name_(nameArg),
     state_(kConnecting),
     reading_(true),
@@ -424,6 +424,6 @@ void TcpConnection::handleError()
 {
   int err = sockets::getSocketError(channel_->fd());
   LOG_ERROR << "TcpConnection::handleError [" << name_
-            << "] - SO_ERROR = " << err << " " << strerror_tl(err);
+            << "] - SO_ERROR = " << err << " " << err;
 }
 

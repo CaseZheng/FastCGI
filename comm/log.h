@@ -40,6 +40,7 @@ using boost::shared_ptr;
 
 enum severity_level  
 {  
+    trace,
     debug,
     info,
     warning,  
@@ -54,6 +55,7 @@ inline std::basic_ostream< CharT, TraitsT >& operator<< (
 {  
         static const char* const str[] =  
         {  
+            "TRACE",  
             "DEBUG",  
             "INFO",  
             "WARNING",  
@@ -79,16 +81,12 @@ public:
 
 #define LOG_CO_PRINT(level, file, func, line, msg) \
     do { \
-        std::stringstream __ss_msg; \
-        __ss_msg << msg; \
-        BOOST_LOG_SEV(my_logger::get(), level) << tools::GetFileNameFromFilePath(file) << "|" << func << "|" << to_string(line) << "|" << __ss_msg.str(); \
+        BOOST_LOG_SEV(my_logger::get(), level) << tools::GetFileNameFromFilePath(file) << "|" << __FUNCTION__ << "|" << line << "|" << msg; \
     } while (0)
 
 #define LOG_PRINT(level, msg) \
     do { \
-        std::stringstream __ss_msg; \
-        __ss_msg << msg; \
-        BOOST_LOG_SEV(my_logger::get(), level) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << to_string(__LINE__) << "|" << __ss_msg.str(); \
+        BOOST_LOG_SEV(my_logger::get(), level) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << __LINE__ << "|" << msg; \
     } while (0)
 
 #define INFO(msg)       LOG_PRINT(info, msg)
@@ -103,5 +101,13 @@ public:
         BOOST_LOG_SEV(my_logger::get(), level) << __ss_msg.str(); \
     } while (0)
 
+#define LOG_TRACE BOOST_LOG_SEV(my_logger::get(), trace) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_DEBUG BOOST_LOG_SEV(my_logger::get(), debug) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_INFO BOOST_LOG_SEV(my_logger::get(), info) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_WARN BOOST_LOG_SEV(my_logger::get(), warning) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_ERROR BOOST_LOG_SEV(my_logger::get(), error) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_FATAL BOOST_LOG_SEV(my_logger::get(), fatal) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_SYSERR BOOST_LOG_SEV(my_logger::get(), fatal) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
+#define LOG_SYSFATAL BOOST_LOG_SEV(my_logger::get(), fatal) << tools::GetFileNameFromFilePath(__FILE__) << "|" << __FUNCTION__ << "|" << (__LINE__) << "|"
 
 #endif

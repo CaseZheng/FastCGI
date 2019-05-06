@@ -8,7 +8,7 @@
 
 #include "muduo_net/PollPoller.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_base/Types.h"
 #include "muduo_net/Channel.h"
 

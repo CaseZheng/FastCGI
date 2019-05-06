@@ -6,7 +6,8 @@
 #include "muduo_base/Thread.h"
 #include "muduo_base/CurrentThread.h"
 #include "muduo_base/Exception.h"
-#include "muduo_base/Logging.h"
+#include "muduo_base/Timestamp.h"
+#include "log.h"
 
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>

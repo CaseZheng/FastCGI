@@ -2,7 +2,7 @@
 #include<sstream>
 #include "fastcgi.h"
 #include "muduo_net/Endian.h"
-#include "muduo_base/Logging.h"
+#include "log.h"
 
 #define FCGI_MAX_LENGTH 0xffff
 

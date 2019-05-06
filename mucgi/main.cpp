@@ -1,11 +1,12 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_net/EventLoop.h"
 #include "muduo_net/TcpServer.h"
 #include "cgicc_lib/Cgicc.h"
 #include "fastcgi.h"
 #include "backend.h"
+#include "tools.h"
 
 using namespace muduo::net;
 
@@ -78,13 +79,16 @@ void onConnection(const TcpConnectionPtr& conn)
 
 int main(int argc, char* argv[])
 {
-    int port = 19981;
+    int port = 9988;
     int threads = 0;
     std::string g_log_path;
     if (argc > 1) port     = atoi(argv[1]);
     if (argc > 2) threads  = atoi(argv[2]);
 
-    muduo::Logger::setLogLevel(muduo::Logger::INFO);
+    daemon(1, 1);
+
+    CLog::InitLog("./log", tools::GetProcessName());
+    CLog::SetFilter(debug);
 
     InetAddress addr(static_cast<uint16_t>(port));
     LOG_INFO << "FastCGI listens on " << addr.toIpPort() << " threads " << threads;

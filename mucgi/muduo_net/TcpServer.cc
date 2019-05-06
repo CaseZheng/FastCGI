@@ -8,7 +8,7 @@
 
 #include "muduo_net/TcpServer.h"
 
-#include "muduo_base/Logging.h"
+#include "log.h"
 #include "muduo_net/Acceptor.h"
 #include "muduo_net/EventLoop.h"
 #include "muduo_net/EventLoopThreadPool.h"
@@ -25,7 +25,7 @@ TcpServer::TcpServer(EventLoop* loop,
                      const InetAddress& listenAddr,
                      const string& nameArg,
                      Option option)
-  : loop_(CHECK_NOTNULL(loop)),
+  : loop_(loop),
     ipPort_(listenAddr.toIpPort()),
     name_(nameArg),
     acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),
