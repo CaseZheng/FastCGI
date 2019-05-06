@@ -10,27 +10,27 @@
 
 using namespace std;
 
-void PrintLog(ECocgiLogLevel eLogLevel, const char *pFile, int iLine, const std::string& strLog)
+void PrintLog(ECocgiLogLevel eLogLevel, const char *pFile, const char *pFunc, int iLine, const std::string& strLog)
 {
     switch(eLogLevel)
     {
         case COCGI_DEBUG:
-            LOG_CO_PRINT(debug, pFile, iLine, strLog);
+            LOG_CO_PRINT(debug, pFile, pFunc, iLine, strLog);
             break;
         case COCGI_INFO:
-            LOG_CO_PRINT(info, pFile, iLine, strLog);
+            LOG_CO_PRINT(info, pFile, pFunc, iLine, strLog);
             break;
         case COCGI_WARN:
-            LOG_CO_PRINT(warning, pFile, iLine, strLog);
+            LOG_CO_PRINT(warning, pFile, pFunc, iLine, strLog);
             break;
         case COCGI_ERROR:
-            LOG_CO_PRINT(error, pFile, iLine, strLog);
+            LOG_CO_PRINT(error, pFile, pFunc, iLine, strLog);
             break;
         case COCGI_FATAL:
-            LOG_CO_PRINT(fatal, pFile, iLine, strLog);
+            LOG_CO_PRINT(fatal, pFile, pFunc, iLine, strLog);
             break;
         default:
-            LOG_CO_PRINT(debug, pFile, iLine, strLog);
+            LOG_CO_PRINT(debug, pFile, pFunc, iLine, strLog);
     };
 }
 

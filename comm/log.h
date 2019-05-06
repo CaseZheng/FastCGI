@@ -77,11 +77,11 @@ public:
     static bool InitLog(const string &strLogPath, const string &strLogName);
 };
 
-#define LOG_CO_PRINT(level, file, line, msg) \
+#define LOG_CO_PRINT(level, file, func, line, msg) \
     do { \
         std::stringstream __ss_msg; \
         __ss_msg << msg; \
-        BOOST_LOG_SEV(my_logger::get(), level) << tools::GetFileNameFromFilePath(file) << "|" << __FUNCTION__ << "|" << to_string(line) << "|" << __ss_msg.str(); \
+        BOOST_LOG_SEV(my_logger::get(), level) << tools::GetFileNameFromFilePath(file) << "|" << func << "|" << to_string(line) << "|" << __ss_msg.str(); \
     } while (0)
 
 #define LOG_PRINT(level, msg) \

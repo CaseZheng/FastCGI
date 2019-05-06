@@ -19,14 +19,14 @@ enum ECocgiLogLevel{
     COCGI_OFF
 };
 
-typedef void(*LogCallBack)(ECocgiLogLevel eLogLevel, const char *pFile, int pLine, const std::string& strLog);
+typedef void(*LogCallBack)(ECocgiLogLevel eLogLevel, const char *pFile, const char *pFunc, int pLine, const std::string& strLog);
 
 #define COCGI_PRINT_LOG(COCGI_LEVEL, msg) \
     if(NULL!=CCocgiServer::GetLogCallBack() && CCocgiServer::GetLogLevel()<=COCGI_LEVEL) \
     { \
         std::stringstream ssLog; \
         ssLog << msg; \
-        CCocgiServer::GetLogCallBack()(COCGI_LEVEL, __FILE__, __LINE__, ssLog.str()); \
+        CCocgiServer::GetLogCallBack()(COCGI_LEVEL, __FILE__, __FUNCTION__, __LINE__, ssLog.str()); \
     }
 
 #define CO_DEBUG(msg) COCGI_PRINT_LOG(COCGI_DEBUG, msg)

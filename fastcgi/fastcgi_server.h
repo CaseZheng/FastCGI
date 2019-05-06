@@ -16,14 +16,14 @@ enum EFastCgiLogLevel{
     FASTCGI_FATAL,
     FASTCGI_OFF
 };
-typedef void(*LogCallBack)(EFastCgiLogLevel eLogLevel, const char *pFile, int pLine, const std::string& strLog);
+typedef void(*LogCallBack)(EFastCgiLogLevel eLogLevel, const char *pFile, const char *pFunc, int pLine, const std::string& strLog);
 
 #define FASTCGI_PRINT_LOG(FASTCGI_LEVEL, msg) \
     if(NULL!=CFastCgiServer::GetLogCallBack() && CFastCgiServer::GetLogLevel()<=FASTCGI_LEVEL) \
     { \
         std::stringstream ssLog; \
         ssLog << msg; \
-        CFastCgiServer::GetLogCallBack()(FASTCGI_LEVEL, __FILE__, __LINE__, ssLog.str()); \
+        CFastCgiServer::GetLogCallBack()(FASTCGI_LEVEL, __FILE__, __FUNCTION__, __LINE__, ssLog.str()); \
     }
 
 #define FAST_DEBUG(msg) FASTCGI_PRINT_LOG(FASTCGI_DEBUG, msg)
