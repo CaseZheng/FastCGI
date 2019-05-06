@@ -145,14 +145,14 @@ bool CFastCgiServer::Run(bool bDaemonize)
             {
                 FAST_INFO("couldn't open and redirect stdout/stderr to '/dev/null': " << strerror(errno));
             } 
-            while(FCGI_Accept() >= 0)
+            while(FCGI_Accept() >= 0)   //阻塞等待新的连接
             {
                 clear();
                 if(NULL != m_pCgiCallBack)
                 {
-                    ParseParam();
-                    m_pCgiCallBack(m_umParam, m_pCgiParameter, m_strOutPacket);
-                    FCGI_printf("%s", m_strOutPacket.c_str()); 
+                    ParseParam();       //参数解析
+                    m_pCgiCallBack(m_umParam, m_pCgiParameter, m_strOutPacket); //调用业务逻辑处理
+                    FCGI_printf("%s", m_strOutPacket.c_str());  //返回请求报文
                 }
                 clear();
             }
